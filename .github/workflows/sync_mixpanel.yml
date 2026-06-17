@@ -2,13 +2,14 @@ name: Sync Mixpanel Data
 
 on:
   schedule:
-    # Runs every day at midnight UTC
     - cron: '0 0 * * *'
-  workflow_dispatch: # Allows you to trigger it manually from the UI for testing
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # Crucial: gives the workflow power to make releases
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -16,24 +17,21 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-node-version: '3.x'
+        python-version: '3.x'
 
     - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install requests
+      run: pip install requests
 
     - name: Run script
-      run: python your_script_name.py # Replace with your actual script filename
+      run: python your_script_name.py
       env:
-        # It's best practice to pass secrets securely rather than hardcoding them
         MIXPANEL_USER: ${{ secrets.MIXPANEL_USER }}
         MIXPANEL_SECRET: ${{ secrets.MIXPANEL_SECRET }}
 
-    - name: Commit and Push JSON
-      run: |
-        git config --global user.name 'github-actions[bot]'
-        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-        git add active_users.json
-        git commit -m "Automated update: Mixpanel active users" || echo "No changes to commit"
-        git push
+    - name: Upload Data to GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: latest
+        files: active_users.json
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Automatically provided by GitHub
