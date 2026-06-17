@@ -8,8 +8,6 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write # Crucial: gives the workflow power to make releases
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -19,21 +17,13 @@ jobs:
       with:
         python-version: '3.x'
 
-   - name: Install dependencies
-         run: |
-           python -m pip install --upgrade pip
-           pip install -r requirements.txt
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install requests mysql-connector-python
 
     - name: Run script
-      run: python your_script_name.py
+      run: python mixpanel_export.py # I can see on your left sidebar this is your exact file name!
       env:
         MIXPANEL_USER: ${{ secrets.MIXPANEL_USER }}
         MIXPANEL_SECRET: ${{ secrets.MIXPANEL_SECRET }}
-
-    - name: Upload Data to GitHub Release
-      uses: softprops/action-gh-release@v2
-      with:
-        tag_name: latest
-        files: active_users.json
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Automatically provided by GitHub
